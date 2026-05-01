@@ -82,6 +82,51 @@ class _MainScheduleScreenState extends State<MainScheduleScreen> {
   }
 
   // ===== 新增：深度克隆课程（防止修改原数据） =====
+  Future<void> _showServerUrlDialog(BuildContext context, AppState state) async {
+    final controller = TextEditingController(text: state.aiServerUrl);
+
+    try {
+      final result = await showDialog<String>(
+        context: context,
+        builder: (ctx) {
+          return AlertDialog(
+            title: const Text('设置服务器地址'),
+            content: TextField(
+              controller: controller,
+              keyboardType: TextInputType.url,
+              decoration: const InputDecoration(
+                labelText: '服务器地址',
+                hintText: '例如 192.168.1.10 或 http://192.168.1.10:8000/api/parse_schedule',
+              ),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(ctx),
+                child: const Text('取消'),
+              ),
+              ElevatedButton(
+                onPressed: () => Navigator.pop(ctx, controller.text),
+                child: const Text('保存'),
+              ),
+            ],
+          );
+        },
+      );
+
+      if (result == null) return;
+
+      final normalized = AiImportService.normalizeServerUrl(result);
+      await state.setAiServerUrl(normalized);
+
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('服务器地址已保存: $normalized')),
+      );
+    } finally {
+      controller.dispose();
+    }
+  }
+
   Course _cloneCourse(Course c) {
     return Course(
       id: c.id, semesterId: c.semesterId, name: c.name, room: c.room,
@@ -427,6 +472,19 @@ class _MainScheduleScreenState extends State<MainScheduleScreen> {
                   SnackBar(content: Text(success ? '导入成功！' : '导入取消或失败')),
                 );
               }
+            },
+          ),
+          ListTile(
+            leading: const Icon(Icons.link),
+            title: const Text('服务器地址设置'),
+            subtitle: Text(
+              state.aiServerUrl,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+            onTap: () async {
+              Navigator.pop(context);
+              await _showServerUrlDialog(context, state);
             },
           ),
           ListTile(

@@ -1,3 +1,4 @@
+# 此脚本可能已经过时 2026.5.1
 import requests
 import json
 import sys
@@ -28,7 +29,7 @@ def test_parse_schedule(image_path):
                     try:
                         data = json.loads(decoded_line)
                         status = data.get('status')
-                        
+
                         if status == 'progress':
                             print(f"\n[PROGRESS] {data.get('message')}")
                         elif status == 'generating':
@@ -43,7 +44,7 @@ def test_parse_schedule(image_path):
                         print(f"Failed to parse JSON line: {decoded_line}")
         else:
             print(f"Error {response.status_code}: {response.text}")
-            
+
     except requests.exceptions.ConnectionError:
         print(f"Connection error to {SERVER_URL}.")
         print("Is the FastAPI server running? Run 'uvicorn server:app --host 0.0.0.0 --port 8000'")

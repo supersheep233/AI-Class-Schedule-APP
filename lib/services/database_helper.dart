@@ -195,6 +195,7 @@ class DatabaseHelper {
     required bool showLunchBreak,
     required bool showDinnerBreak,
     required bool showNonThisWeekCourses,
+    required String aiServerUrl,
     required bool initialized,
   }) async {
     final db = await database;
@@ -210,6 +211,7 @@ class DatabaseHelper {
       await set('showLunchBreak', showLunchBreak.toString());
       await set('showDinnerBreak', showDinnerBreak.toString());
       await set('showNonThisWeekCourses', showNonThisWeekCourses.toString());
+      await set('aiServerUrl', aiServerUrl);
       await set('initialized', initialized.toString());
     });
   }

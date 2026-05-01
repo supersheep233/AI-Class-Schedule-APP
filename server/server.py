@@ -8,12 +8,14 @@ from fastapi.responses import StreamingResponse
 from openai import AsyncOpenAI
 
 # Kimi (Moonshot AI) 配置
-MOONSHOT_API_KEY = os.environ.get("MOONSHOT_API_KEY", "<YOUR_API_KEY>")
+MOONSHOT_API_KEY = os.environ.get("MOONSHOT_API_KEY")
+if not MOONSHOT_API_KEY:
+    raise RuntimeError("MOONSHOT_API_KEY is required. Set it in your environment before starting the server.")
 kimi_client = AsyncOpenAI(
     api_key=MOONSHOT_API_KEY,
     base_url="https://api.moonshot.cn/v1"
 )
-KIMI_MODEL = "kimi-k2.5"
+KIMI_MODEL = "kimi-k2.6"
 
 app = FastAPI()
 
@@ -37,9 +39,9 @@ async def parse_schedule(file: UploadFile = File(...)):
             image_data_url = encode_image_to_data_url(contents, file.content_type or "image/png")
 
             # ============================================================
-            # 阶段 1/2：调用 Kimi v2.5 视觉能力，将课表图片转为 Markdown 表格
+            # 阶段 1/2：调用 Kimi v2.6 视觉能力，将课表图片转为 Markdown 表格
             # ============================================================
-            yield json.dumps({"status": "progress", "message": "阶段1/2: 正在使用 Kimi v2.5 识别课表图片..."}, ensure_ascii=False) + "\n"
+            yield json.dumps({"status": "progress", "message": "阶段1/2: 正在使用 Kimi v2.6 识别课表图片..."}, ensure_ascii=False) + "\n"
             await asyncio.sleep(0.1)
 
             step1_prompt = (
@@ -90,9 +92,9 @@ async def parse_schedule(file: UploadFile = File(...)):
             await asyncio.sleep(0.1)
 
             # ============================================================
-            # 阶段 2/2：调用 Kimi v2.5 将 Markdown 表格整理为结构化 JSON
+            # 阶段 2/2：调用 Kimi v2.6 将 Markdown 表格整理为结构化 JSON
             # ============================================================
-            yield json.dumps({"status": "progress", "message": "阶段2/2: 正在使用 Kimi v2.5 将表格转为结构化 JSON..."}, ensure_ascii=False) + "\n"
+            yield json.dumps({"status": "progress", "message": "阶段2/2: 正在使用 Kimi v2.6 将表格转为结构化 JSON..."}, ensure_ascii=False) + "\n"
             await asyncio.sleep(0.1)
 
             step2_prompt = f"""

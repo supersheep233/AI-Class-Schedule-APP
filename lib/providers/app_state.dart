@@ -19,6 +19,7 @@ class AppState extends ChangeNotifier {
   final DatabaseHelper _dbHelper = DatabaseHelper();
 
   bool showNonThisWeekCourses = false;
+  String aiServerUrl = 'http://127.0.0.1:8000/api/parse_schedule';
 
   List<Semester> semesters = [];
   Semester? currentSemester;
@@ -203,6 +204,14 @@ class AppState extends ChangeNotifier {
 
   Future<void> toggleShowNonThisWeekCourses(bool val) async {
     showNonThisWeekCourses = val;
+    await _saveSettingsToDb();
+    notifyListeners();
+  }
+
+  Future<void> setAiServerUrl(String url) async {
+    aiServerUrl = url.trim().isEmpty
+        ? 'http://127.0.0.1:8000/api/parse_schedule'
+        : url.trim();
     await _saveSettingsToDb();
     notifyListeners();
   }
@@ -425,6 +434,7 @@ class AppState extends ChangeNotifier {
         showLunchBreak: showLunchBreak,
         showDinnerBreak: showDinnerBreak,
         showNonThisWeekCourses: showNonThisWeekCourses,
+        aiServerUrl: aiServerUrl,
         initialized: true,
       );
       if (isDataLoaded && !_isLoadingData) {
@@ -494,12 +504,16 @@ class AppState extends ChangeNotifier {
         final showDinnerStr = await _dbHelper.getSetting('showDinnerBreak');
         final showNonThisWeekStr =
             await _dbHelper.getSetting('showNonThisWeekCourses');
+        final aiServerUrlStr = await _dbHelper.getSetting('aiServerUrl');
 
         lunchBreakAfterSlot = int.tryParse(lunchStr ?? '') ?? 4;
         dinnerBreakAfterSlot = int.tryParse(dinnerStr ?? '') ?? 8;
         showLunchBreak = showLunchStr == 'true';
         showDinnerBreak = showDinnerStr != 'false';
         showNonThisWeekCourses = showNonThisWeekStr == 'true';
+        if (aiServerUrlStr != null && aiServerUrlStr.trim().isNotEmpty) {
+          aiServerUrl = aiServerUrlStr.trim();
+        }
 
         if (currentSemId != null && currentSemId.isNotEmpty) {
           currentSemester = semesters.firstWhere(

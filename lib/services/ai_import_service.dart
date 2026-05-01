@@ -9,10 +9,37 @@ import '../models/models.dart';
 import '../providers/app_state.dart';
 
 class AiImportService {
-  static const String serverUrl = 'http://118.25.192.34:8000/api/parse_schedule';
+  static const String defaultServerUrl = 'http://127.0.0.1:8000/api/parse_schedule';
+  static const String defaultApiPath = '/api/parse_schedule';
+  static const int defaultApiPort = 8000;
+
+  static String normalizeServerUrl(String input) {
+    final raw = input.trim();
+    if (raw.isEmpty) return defaultServerUrl;
+
+    var normalized = raw;
+    if (!normalized.startsWith('http://') && !normalized.startsWith('https://')) {
+      normalized = 'http://$normalized';
+    }
+
+    final uri = Uri.tryParse(normalized);
+    if (uri == null) return defaultServerUrl;
+
+    if (uri.path.isEmpty || uri.path == '/') {
+      if (uri.hasAuthority && uri.port == 0) {
+        return uri.replace(port: defaultApiPort, path: defaultApiPath).toString();
+      }
+      return uri.replace(path: defaultApiPath).toString();
+    }
+
+    return uri.toString();
+  }
 
   // 1. 核心方法：使用流式读取，并实时在界面上更新状态
-  static Future<Map<String, dynamic>?> importFromImage(BuildContext context) async {
+  static Future<Map<String, dynamic>?> importFromImage(
+    BuildContext context, {
+    String? serverUrl,
+  }) async {
     final picker = ImagePicker();
     final XFile? image = await picker.pickImage(source: ImageSource.gallery);
 
@@ -87,7 +114,10 @@ class AiImportService {
         client = http.Client();
       }
 
-      var request = http.MultipartRequest('POST', Uri.parse(serverUrl));
+      var request = http.MultipartRequest(
+        'POST',
+        Uri.parse(normalizeServerUrl(serverUrl ?? AppState().aiServerUrl)),
+      );
       request.files.add(await http.MultipartFile.fromPath('file', image.path));
 
       // 发送请求，获取流式响应
